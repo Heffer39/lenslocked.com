@@ -1,4 +1,4 @@
-module lenslinked.com
+module lenslocked.com
 
 go 1.15
 

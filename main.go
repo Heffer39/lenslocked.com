@@ -3,27 +3,25 @@ package main
 import (
 	"fmt"
 	"github.com/gorilla/mux"
-	"html/template"
+	"lenslocked.com/controllers"
+	"lenslocked.com/views"
 	"net/http"
 )
 
-var homeTemplate *template.Template
-var contactTemplate *template.Template
+var (
+	homeView    *views.View
+	contactView *views.View
+)
 
 func main() {
-	var err error
-	homeTemplate, err = template.ParseFiles("views/home.gohtml")
-	if err != nil {
-		panic(err)
-	}
-	contactTemplate, err = template.ParseFiles("views/contact.gohtml")
-	if err != nil {
-		panic(err)
-	}
+	homeView = views.NewView("bootstrap", "views/home.gohtml")
+	contactView = views.NewView("bootstrap", "views/contact.gohtml")
+	usersC := controllers.NewUsers()
 	var notFound http.Handler = http.HandlerFunc(notFound)
 	r := mux.NewRouter()
 	r.HandleFunc("/", home)
 	r.HandleFunc("/contact", contact)
+	r.HandleFunc("/signup", usersC.New)
 	r.NotFoundHandler = notFound
 	http.ListenAndServe(":3000", r)
 }
@@ -38,18 +36,16 @@ func notFound(writer http.ResponseWriter, request *http.Request) {
 
 func home(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "text/html")
-	if err := homeTemplate.Execute(writer, nil); err != nil {
-		panic(err)
-	}
-	//fmt.Fprint(writer, "<h1>Welcome to my awesome site!</h1>")
+	must(homeView.Render(writer, nil))
 }
 
 func contact(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "text/html")
-	if err := contactTemplate.Execute(writer, nil); err != nil {
+	must(contactView.Render(writer, nil))
+}
+
+func must(err error) {
+	if err != nil {
 		panic(err)
 	}
-	//fmt.Fprint(writer, "To get in touch, please send an email " +
-	//	"to <a href=\"mailto:support@lenslinked.com\">"+
-	//	"support@lenslinked.com</a>.")
 }
